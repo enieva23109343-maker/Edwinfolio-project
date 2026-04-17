@@ -30,7 +30,7 @@ app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/admin', adminRoutes);
 
-// ── Production Static File Serving (ADD THIS BLOCK) ───────────
+// ── Production Static File Serving ───────────────────────────
 if (process.env.NODE_ENV === 'production') {
     // Serve React frontend static files
     app.use(express.static(path.join(__dirname, '../frontend/build')));
