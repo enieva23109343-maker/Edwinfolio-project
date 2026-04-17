@@ -10,12 +10,12 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState([]); // Move to state
 
-  // Mock users storage with default admin
-  const [users, setUsers] = useState(() => {
+  // Load users on mount
+  useEffect(() => {
     const savedUsers = localStorage.getItem("mockUsers");
     if (!savedUsers) {
-      // Create default admin user
       const defaultUsers = [
         {
           id: 1,
@@ -28,17 +28,27 @@ export function AuthProvider({ children }) {
         }
       ];
       localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
-      return defaultUsers;
+      setUsers(defaultUsers);
+    } else {
+      setUsers(JSON.parse(savedUsers));
     }
-    return JSON.parse(savedUsers);
-  });
+
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setLoading(false);
+  }, []);
 
   // Login function
   const login = async (email, password) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Login attempt:", email, password);
+      console.log("Available users:", users);
       
       const foundUser = users.find(u => u.email === email && u.password === password);
+      
+      console.log("Found user:", foundUser);
       
       if (!foundUser) {
         throw new Error("Invalid email or password");
@@ -55,8 +65,10 @@ export function AuthProvider({ children }) {
       
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
+      console.log("Login successful, redirecting...");
       return userData;
     } catch (error) {
+      console.error("Login error:", error.message);
       throw new Error(error.message);
     }
   };
@@ -64,8 +76,6 @@ export function AuthProvider({ children }) {
   // Register function
   const register = async (name, email, password) => {
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const existingUser = users.find(u => u.email === email);
       if (existingUser) {
         throw new Error("Email already registered");
@@ -119,9 +129,7 @@ export function AuthProvider({ children }) {
     setUser(updatedUserData);
     localStorage.setItem("user", JSON.stringify(updatedUserData));
     
-    // Also update in mockUsers
-    const storedUsers = JSON.parse(localStorage.getItem("mockUsers") || '[]');
-    const updatedUsers = storedUsers.map(u => {
+    const updatedUsers = users.map(u => {
       if (u.id === updatedUserData.id) {
         return {
           ...u,
@@ -132,20 +140,14 @@ export function AuthProvider({ children }) {
       }
       return u;
     });
+    
+    setUsers(updatedUsers);
     localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
   };
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
-
   const value = {
     user,
-    setUser: updateUser,  // Add setUser function
+    setUser: updateUser,
     login,
     register,
     logout,

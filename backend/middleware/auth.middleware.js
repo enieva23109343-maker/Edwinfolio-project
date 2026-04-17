@@ -29,6 +29,47 @@ const protect = async (req, res, next) => {
     } catch (err) {
         return res.status(401).json({ message: 'Token is invalid or has expired' });
     }
+    // Update profile with image upload
+router.put('/profile', verifyToken, upload.single('profilePic'), async (req, res) => {
+  try {
+    const { name, bio } = req.body;
+    const updateData = { name, bio };
+    
+    if (req.file) {
+      updateData.profilePic = `/uploads/${req.file.filename}`;
+    }
+    
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      updateData,
+      { new: true }
+    ).select('-password');
+    
+    res.json({ user });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile' });
+  }
+});
+
+// Change password
+router.put('/password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.userId);
+    
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+    
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error changing password' });
+  }
+});
 };
 
 module.exports = { protect };

@@ -19,6 +19,16 @@ const ProfilePage = () => {
   const [showCurPw, setShowCurPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
 
+  // Convert image to Base64
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleProfile = async (e) => {
     e.preventDefault();
     setMsg("");
@@ -26,8 +36,19 @@ const ProfilePage = () => {
     setLoading(true);
 
     try {
+      console.log("Starting profile update...");
+      
+      // Convert image to Base64 if exists
+      let imageBase64 = null;
+      if (pic) {
+        console.log("Converting image to Base64...");
+        imageBase64 = await convertToBase64(pic);
+        console.log("Image converted successfully");
+      }
+      
       // Get existing users from localStorage
       const storedUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+      console.log("Current users:", storedUsers);
       
       // Update user info
       const updatedUsers = storedUsers.map(u => {
@@ -36,24 +57,28 @@ const ProfilePage = () => {
             ...u,
             name: name,
             bio: bio,
-            profilePic: pic ? URL.createObjectURL(pic) : (u.profilePic || null)
+            profilePic: imageBase64 || (u.profilePic || null)
           };
         }
         return u;
       });
       
       localStorage.setItem('mockUsers', JSON.stringify(updatedUsers));
+      console.log("Updated users saved to localStorage");
 
       // Update current user in state and localStorage
       const updatedUser = {
         ...user,
         name: name,
         bio: bio,
-        profilePic: pic ? URL.createObjectURL(pic) : (user.profilePic || null)
+        profilePic: imageBase64 || (user.profilePic || null)
       };
       
+      // Use setUser to update
       setUser(updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      console.log("Profile updated successfully:", updatedUser);
 
       setMsg("Profile updated successfully!");
       setIsError(false);
@@ -66,7 +91,7 @@ const ProfilePage = () => {
       
     } catch (err) {
       console.error("Profile update error:", err);
-      setMsg("Error updating profile");
+      setMsg("Error updating profile: " + err.message);
       setIsError(true);
     } finally {
       setLoading(false);
@@ -128,11 +153,13 @@ const ProfilePage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      console.log("Image selected:", file.name, file.type, file.size);
       setPic(file);
       setPicPreview(URL.createObjectURL(file));
     }
   };
 
+  // Use profilePic from user (Base64) or preview or placeholder
   const picSrc = picPreview || (user?.profilePic
     ? user.profilePic
     : "https://via.placeholder.com/120?text=No+Image");

@@ -7,6 +7,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -16,14 +17,19 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
     
     try {
-      await login(email, password);
-      navigate("/");
+      const result = await login(email, password);
+      console.log("Login result:", result);
+      setSuccess("✓ Login successful! Redirecting...");
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (err) {
-      setError("Invalid email or password");
-    } finally {
+      console.error("Login error caught:", err);
+      setError(err.message || "Invalid email or password");
       setLoading(false);
     }
   };
@@ -36,6 +42,12 @@ function LoginPage() {
         {error && (
           <div className="error-message">
             {error}
+          </div>
+        )}
+        
+        {success && (
+          <div className="success-message">
+            {success}
           </div>
         )}
         

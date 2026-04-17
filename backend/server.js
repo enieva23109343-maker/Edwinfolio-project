@@ -30,7 +30,29 @@ app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/admin', adminRoutes);
 
+<<<<<<< HEAD
 // ── Production Static File Serving ───────────────────────────
+=======
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+
+const upload = multer({ storage });
+
+// Serve uploads statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ── Production Static File Serving (ADD THIS BLOCK) ───────────
+>>>>>>> 7d035b3a4a9df22f13851ef08ba7d30f9f48c621
 if (process.env.NODE_ENV === 'production') {
     // Serve React frontend static files
     app.use(express.static(path.join(__dirname, '../frontend/build')));
