@@ -10,7 +10,6 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState([]); // Move to state
 
   // Load users on mount
   useEffect(() => {
@@ -20,17 +19,14 @@ export function AuthProvider({ children }) {
         {
           id: 1,
           name: "Admin User",
-          email: "admin@gmai.com",
-          password: "admin@1234",
+          email: "admin@thefolio.com",
+          password: "Admin@1234",
           role: "admin",
           bio: "",
           profilePic: null
         }
       ];
       localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
-      setUsers(defaultUsers);
-    } else {
-      setUsers(JSON.parse(savedUsers));
     }
 
     const storedUser = localStorage.getItem("user");
@@ -40,13 +36,16 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  // Login function
+  // Login function - FIXED: Always read directly from localStorage
   const login = async (email, password) => {
     try {
       console.log("Login attempt:", email, password);
-      console.log("Available users:", users);
       
-      const foundUser = users.find(u => u.email === email && u.password === password);
+      // Always get fresh users from localStorage
+      const usersFromStorage = JSON.parse(localStorage.getItem("mockUsers") || "[]");
+      console.log("Available users:", usersFromStorage);
+      
+      const foundUser = usersFromStorage.find(u => u.email === email && u.password === password);
       
       console.log("Found user:", foundUser);
       
@@ -65,7 +64,7 @@ export function AuthProvider({ children }) {
       
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
-      console.log("Login successful, redirecting...");
+      console.log("Login successful!");
       return userData;
     } catch (error) {
       console.error("Login error:", error.message);
@@ -73,10 +72,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Register function
+  // Register function - FIXED
   const register = async (name, email, password) => {
     try {
-      const existingUser = users.find(u => u.email === email);
+      const usersFromStorage = JSON.parse(localStorage.getItem("mockUsers") || "[]");
+      
+      const existingUser = usersFromStorage.find(u => u.email === email);
       if (existingUser) {
         throw new Error("Email already registered");
       }
@@ -93,8 +94,7 @@ export function AuthProvider({ children }) {
         profilePic: null
       };
       
-      const updatedUsers = [...users, newUser];
-      setUsers(updatedUsers);
+      const updatedUsers = [...usersFromStorage, newUser];
       localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
       
       const userData = {
@@ -116,20 +116,17 @@ export function AuthProvider({ children }) {
 
   // Logout function
   const logout = async () => {
-    try {
-      setUser(null);
-      localStorage.removeItem("user");
-    } catch (error) {
-      throw new Error("Logout failed");
-    }
+    setUser(null);
+    localStorage.removeItem("user");
   };
 
-  // Update user function
+  // Update user function - FIXED
   const updateUser = (updatedUserData) => {
     setUser(updatedUserData);
     localStorage.setItem("user", JSON.stringify(updatedUserData));
     
-    const updatedUsers = users.map(u => {
+    const usersFromStorage = JSON.parse(localStorage.getItem("mockUsers") || "[]");
+    const updatedUsers = usersFromStorage.map(u => {
       if (u.id === updatedUserData.id) {
         return {
           ...u,
@@ -141,7 +138,6 @@ export function AuthProvider({ children }) {
       return u;
     });
     
-    setUsers(updatedUsers);
     localStorage.setItem("mockUsers", JSON.stringify(updatedUsers));
   };
 
