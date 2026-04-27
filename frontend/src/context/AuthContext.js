@@ -12,33 +12,38 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]); // Move to state
 
-  // Load users on mount
   useEffect(() => {
-    const savedUsers = localStorage.getItem("mockUsers");
-    if (!savedUsers) {
-      const defaultUsers = [
-        {
-          id: 1,
-          name: "Admin User",
-          email: "admin@thefolio.com",
-          password: "Admin@1234",
-          role: "admin",
-          bio: "",
-          profilePic: null
-        }
-      ];
-      localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
-      setUsers(defaultUsers);
-    } else {
-      setUsers(JSON.parse(savedUsers));
-    }
+  let savedUsers = JSON.parse(localStorage.getItem("mockUsers"));
 
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+  // FIX: check if null OR empty array
+  if (!savedUsers || savedUsers.length === 0) {
+    const defaultUsers = [
+      {
+        id: 1,
+        name: "Admin User",
+        email: "admin@thefolio.com",
+        password: "Admin@1234",
+        role: "admin",
+        bio: "",
+        profilePic: null
+      }
+    ];
+
+    localStorage.setItem("mockUsers", JSON.stringify(defaultUsers));
+    setUsers(defaultUsers);
+    console.log("✅ Default admin created");
+  } else {
+    setUsers(savedUsers);
+    console.log("✅ Users loaded:", savedUsers);
+  }
+
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
+
+  setLoading(false);
+}, []);
 
   // Login function
   const login = async (email, password) => {
