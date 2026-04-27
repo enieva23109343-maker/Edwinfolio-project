@@ -20,8 +20,8 @@ export function AuthProvider({ children }) {
         {
           id: 1,
           name: "Admin User",
-          email: "admin@gmail.com",
-          password: "admin123",
+          email: "admin@thefolio.com",
+          password: "Admin@1234",
           role: "admin",
           bio: "",
           profilePic: null
